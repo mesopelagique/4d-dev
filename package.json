@@ -28,6 +28,10 @@
   "author": "",
   "license": "MIT",
   "publisher": "your-publisher-name",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mesopelagique/4d-dev.git"
+  },
   "engines": {
     "vscode": "^1.80.0"
   },
