@@ -1,4 +1,3 @@
-````markdown
 # 4D-Dev
 
 **MCP server and VS Code extension** to interact with the 4D IDE from your AI assistant or directly from VS Code.
@@ -216,4 +215,3 @@ If nothing is found, it falls back to `open -b com.4D.4D <file>`.
 - **Type check**: `npm run typecheck`
 - **Package extension**: `npm run package`
 
-````
