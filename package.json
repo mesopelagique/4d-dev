@@ -1,0 +1,113 @@
+{
+  "name": "4d-dev",
+  "displayName": "4D-Dev",
+  "version": "0.1.0",
+  "description": "MCP server and VS Code extension to interact with the 4D IDE: open 4D projects and methods.",
+  "icon": "logo.png",
+  "type": "module",
+  "main": "dist/extension.js",
+  "bin": {
+    "4d-dev": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "vscode:prepublish": "npm run build",
+    "package": "vsce package"
+  },
+  "keywords": [
+    "mcp",
+    "4d",
+    "ide",
+    "server",
+    "model-context-protocol",
+    "vscode-extension"
+  ],
+  "author": "",
+  "license": "MIT",
+  "publisher": "your-publisher-name",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "4d-dev.openProject",
+        "title": "4D: Open Project in 4D IDE"
+      },
+      {
+        "command": "4d-dev.openCurrentFileIn4D",
+        "title": "4D: Open Current File in 4D IDE"
+      },
+      {
+        "command": "4d-dev.enableMcpServer",
+        "title": "4D: Enable MCP Server"
+      },
+      {
+        "command": "4d-dev.disableMcpServer",
+        "title": "4D: Disable MCP Server"
+      }
+    ],
+    "configuration": {
+      "title": "4D",
+      "properties": {
+        "4d-dev.applicationPath": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Path to 4D.app (e.g., `/Applications/4D v20 R6/4D.app`). If empty, auto-discovery via Spotlight will be used.",
+          "scope": "machine"
+        },
+        "4d-dev.enableMcpServer": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Enable the MCP server for use with AI assistants like Claude Desktop. When enabled, the extension will automatically register itself in your MCP settings.",
+          "scope": "machine"
+        }
+      }
+    },
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "4d-dev.openProject",
+          "when": "resourceExtname == .4DProject",
+          "group": "navigation"
+        },
+        {
+          "command": "4d-dev.openCurrentFileIn4D",
+          "when": "resourceExtname == .4dm",
+          "group": "navigation"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "4d-dev.openCurrentFileIn4D",
+          "when": "resourceExtname == .4dm",
+          "group": "navigation"
+        }
+      ]
+    },
+    "languages": [
+      {
+        "id": "4d",
+        "extensions": [".4dm"],
+        "aliases": ["4D Method", "4d"]
+      }
+    ]
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.20.2",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.4",
+    "@types/vscode": "^1.80.0",
+    "@vscode/vsce": "^2.22.0",
+    "tsx": "^4.16.2",
+    "typescript": "^5.6.3"
+  }
+}

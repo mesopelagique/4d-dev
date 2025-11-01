@@ -1,0 +1,13 @@
+{
+  "servers": {
+    "mcp-4d": {
+      "command": "node",
+      "args": [
+        "${workspaceFolder}/dist/index.js"
+      ],
+      "env": {
+        "FOURD_APP": "/Applications/4D 0.0/4D.app"
+      }
+    }
+  }
+}
