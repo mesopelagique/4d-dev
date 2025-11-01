@@ -27,7 +27,7 @@
   ],
   "author": "",
   "license": "MIT",
-  "publisher": "your-publisher-name",
+  "publisher": "mesopelagique",
   "repository": {
     "type": "git",
     "url": "https://github.com/mesopelagique/4d-dev.git"
@@ -38,6 +38,9 @@
   "categories": [
     "Other"
   ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "contributes": {
     "commands": [
       {
@@ -47,14 +50,6 @@
       {
         "command": "4d-dev.openCurrentFileIn4D",
         "title": "4D: Open Current File in 4D IDE"
-      },
-      {
-        "command": "4d-dev.enableMcpServer",
-        "title": "4D: Enable MCP Server"
-      },
-      {
-        "command": "4d-dev.disableMcpServer",
-        "title": "4D: Disable MCP Server"
       }
     ],
     "configuration": {
@@ -64,12 +59,6 @@
           "type": "string",
           "default": "",
           "markdownDescription": "Path to 4D.app (e.g., `/Applications/4D v20 R6/4D.app`). If empty, auto-discovery via Spotlight will be used.",
-          "scope": "machine"
-        },
-        "4d-dev.enableMcpServer": {
-          "type": "boolean",
-          "default": false,
-          "markdownDescription": "Enable the MCP server for use with AI assistants like Claude Desktop. When enabled, the extension will automatically register itself in your MCP settings.",
           "scope": "machine"
         }
       }
@@ -100,6 +89,12 @@
         "id": "4d",
         "extensions": [".4dm"],
         "aliases": ["4D Method", "4d"]
+      }
+    ],
+    "mcpServerDefinitionProviders": [
+      {
+        "id": "4d-dev",
+        "label": "4D IDE"
       }
     ]
   },

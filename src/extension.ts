@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 import * as path from "node:path";
 import * as fs from "node:fs";
-import * as os from "node:os";
 import { openProject, openMethod } from "./core.js";
 
 /**
@@ -14,97 +13,26 @@ function get4DAppPath(): string | undefined {
 }
 
 /**
- * Get the MCP configuration file path
+ * MCP Server Definition Provider for 4D
  */
-function getMcpConfigPath(): string {
-  if (process.platform === "darwin") {
-    return path.join(os.homedir(), "Library", "Application Support", "Code", "User", "globalStorage", "saoudrizwan.claude-dev", "settings", "cline_mcp_settings.json");
-  }
-  // Add Windows/Linux paths if needed
-  return "";
-}
-
-/**
- * Register this extension as an MCP server
- */
-async function registerMcpServer(context: vscode.ExtensionContext): Promise<void> {
-  try {
-    const config = vscode.workspace.getConfiguration("4d-dev");
-    const enabled = config.get<boolean>("enableMcpServer", false);
-
-    if (!enabled) {
-      return;
+class FourDMcpServerProvider implements vscode.McpServerDefinitionProvider {
+  provideMcpServerDefinitions(): vscode.ProviderResult<vscode.McpServerDefinition[]> {
+    const extensionPath = vscode.extensions.getExtension("mesopelagique.4d-dev")?.extensionPath;
+    if (!extensionPath) {
+      return [];
     }
 
-    const mcpConfigPath = getMcpConfigPath();
-    if (!mcpConfigPath) {
-      vscode.window.showWarningMessage("MCP configuration path not supported on this platform yet.");
-      return;
-    }
-
-    // Ensure directory exists
-    const mcpConfigDir = path.dirname(mcpConfigPath);
-    if (!fs.existsSync(mcpConfigDir)) {
-      fs.mkdirSync(mcpConfigDir, { recursive: true });
-    }
-
-    // Read existing config or create new
-    let mcpConfig: any = { mcpServers: {} };
-    if (fs.existsSync(mcpConfigPath)) {
-      try {
-        const content = fs.readFileSync(mcpConfigPath, "utf8");
-        mcpConfig = JSON.parse(content);
-        if (!mcpConfig.mcpServers) {
-          mcpConfig.mcpServers = {};
-        }
-      } catch (err) {
-        console.error("Failed to parse MCP config:", err);
-      }
-    }
-
-    // Get the extension's installation path
-    const extensionPath = context.extensionPath;
     const serverPath = path.join(extensionPath, "dist", "index.js");
-
-    // Add or update our server entry
     const appPath = get4DAppPath();
-    mcpConfig.mcpServers["4d-dev"] = {
-      command: "node",
-      args: [serverPath],
-      ...(appPath && { env: { FOURD_APP: appPath } })
-    };
 
-    // Write back
-    fs.writeFileSync(mcpConfigPath, JSON.stringify(mcpConfig, null, 2), "utf8");
+    const serverDefinition = new vscode.McpStdioServerDefinition(
+      "4D IDE",
+      "node",
+      [serverPath],
+      appPath ? { FOURD_APP: appPath } : undefined
+    );
 
-    vscode.window.showInformationMessage("4D MCP server registered successfully! Restart your MCP client to use it.");
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    vscode.window.showErrorMessage(`Failed to register MCP server: ${message}`);
-  }
-}
-
-/**
- * Unregister this extension from MCP servers
- */
-async function unregisterMcpServer(): Promise<void> {
-  try {
-    const mcpConfigPath = getMcpConfigPath();
-    if (!mcpConfigPath || !fs.existsSync(mcpConfigPath)) {
-      return;
-    }
-
-    const content = fs.readFileSync(mcpConfigPath, "utf8");
-    const mcpConfig = JSON.parse(content);
-
-    if (mcpConfig.mcpServers && mcpConfig.mcpServers["4d-dev"]) {
-      delete mcpConfig.mcpServers["4d-dev"];
-      fs.writeFileSync(mcpConfigPath, JSON.stringify(mcpConfig, null, 2), "utf8");
-      vscode.window.showInformationMessage("4D MCP server unregistered successfully!");
-    }
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    vscode.window.showErrorMessage(`Failed to unregister MCP server: ${message}`);
+    return [serverDefinition];
   }
 }
 
@@ -149,38 +77,12 @@ async function find4DProjectFiles(): Promise<string[]> {
 export function activate(context: vscode.ExtensionContext) {
   console.log('Extension "4d-dev" is now active!');
 
-  // Register MCP server if enabled
-  registerMcpServer(context);
-
-  // Watch for configuration changes
-  context.subscriptions.push(
-    vscode.workspace.onDidChangeConfiguration(e => {
-      if (e.affectsConfiguration("4d-dev.enableMcpServer") || 
-          e.affectsConfiguration("4d-dev.applicationPath")) {
-        registerMcpServer(context);
-      }
-    })
+  // Register MCP Server Definition Provider
+  const mcpProvider = vscode.lm.registerMcpServerDefinitionProvider(
+    "4d-dev",
+    new FourDMcpServerProvider()
   );
-
-  // Command: Enable MCP Server
-  const enableMcpCommand = vscode.commands.registerCommand(
-    "4d-dev.enableMcpServer",
-    async () => {
-      const config = vscode.workspace.getConfiguration("4d-dev");
-      await config.update("enableMcpServer", true, vscode.ConfigurationTarget.Global);
-      await registerMcpServer(context);
-    }
-  );
-
-  // Command: Disable MCP Server
-  const disableMcpCommand = vscode.commands.registerCommand(
-    "4d-dev.disableMcpServer",
-    async () => {
-      const config = vscode.workspace.getConfiguration("4d-dev");
-      await config.update("enableMcpServer", false, vscode.ConfigurationTarget.Global);
-      await unregisterMcpServer();
-    }
-  );
+  context.subscriptions.push(mcpProvider);
 
   // Command: Open 4D Project
   const openProjectCommand = vscode.commands.registerCommand(
@@ -293,8 +195,6 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
-    enableMcpCommand,
-    disableMcpCommand,
     openProjectCommand,
     openCurrentFileCommand
   );
